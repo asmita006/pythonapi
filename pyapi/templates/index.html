@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Management</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container">
+    <h1>User Management</h1>
+    <form id="userForm">
+      <div class="form-group">
+        <label for="name">Name:</label>
+        <input type="text" class="form-control" id="name" name="name" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Create User</button>
+    </form>
+    <br>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    function getUsers() {
+      fetch('/users')
+        .then(response => response.json())
+        .then(data => {
+          const tableBody = document.getElementById('userTableBody');
+          tableBody.innerHTML = '';
+          data.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${user[0]}</td>
+              <td>${user[1]}</td>
+              <td>${user[2]}</td>
+              <td>
+                <button class="btn btn-danger" onclick="deleteUser(${user[0]})">Delete</button>
+              </td>
+            `;
+            tableBody.appendChild(row);
+          });
+        });
+    }
+
+    function createUser(event) {
+      event.preventDefault();
+      const form = document.getElementById('userForm');
+      const nameInput = document.getElementById('name');
+      const emailInput = document.getElementById('email');
+      const name = nameInput.value;
+      const email = emailInput.value;
+
+      fetch('/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email })
+      })
+        .then(response => response.json())
+        .then(user => {
+          nameInput.value = '';
+          emailInput.value = '';
+          getUsers();
+        });
+    }
+
+    function deleteUser(userId) {
+      fetch(`/users/${userId}`, {
+        method: 'DELETE'
+      })
+        .then(response => response.json())
+        .then(data => {
+          getUsers();
+        });
+    }
+
+    document.getElementById('userForm').addEventListener('submit', createUser);
+    getUsers();
+  </script>
+</body>
+</html>
